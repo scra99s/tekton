@@ -1,0 +1,103 @@
+# This definition needs to deployed using kubeapply.sh
+# bash setup/config/kubeapply.sh app/registry/registry-deployment.yaml
+---
+########################################
+# Registry namespace.
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: registry
+  labels:
+    name: registry
+
+---
+########################################
+# TLS Secrets for ingress.
+kind: Secret
+apiVersion: v1
+metadata:
+  name: ingress-tls
+  namespace: registry
+type: kubernetes.io/tls
+data:
+  tls.crt: |
+    ${templateVariables[__SSL_SERVER_CERT_B64__]}
+  tls.key: |
+    ${templateVariables[__SSL_SERVER_KEY_B64__]}
+
+---
+########################################
+# Registry service. 
+kind: Service
+apiVersion: v1
+metadata:
+  name: registry
+  namespace: registry
+spec:
+  selector:
+    app: docker-registry
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 30001
+      targetPort: 30001
+
+---
+########################################
+# Registry Ingress.
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: registry
+  namespace: registry
+  # annotations:
+  #   nginx.ingress.kubernetes.io/auth-type: basic
+  #   nginx.ingress.kubernetes.io/auth-secret: ingress-registry-basic-auth
+  #   nginx.ingress.kubernetes.io/auth-realm: 'Authentication Required'
+spec:
+  tls:
+    - secretName: ingress-tls
+  rules:
+    - host: docker-registry.jerra.io
+      http:
+        paths:
+          - pathType: ImplementationSpecific
+            backend:
+              service:
+                name: registry
+                port:
+                  number: 30001
+
+---
+########################################
+# Registry deployment.
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: docker-registry
+  namespace: registry
+spec:
+  selector:
+    matchLabels:
+      app: docker-registry
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: docker-registry
+    spec:
+      containers:
+        - name: docker-registry
+          image: registry:2
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          ports:
+            - containerPort: 30001
+          env:
+            - name: REGISTRY_HTTP_ADDR
+              value: "0.0.0.0:30001"
