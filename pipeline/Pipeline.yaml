@@ -36,7 +36,7 @@ spec:
   type: git
   params:
     - name: url
-      value: git@github.com:scra99s/tekton-practice.git
+      value: git@github.com:scra99s/tekton.git
     - name: revision
       value: main
 
