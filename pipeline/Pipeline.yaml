@@ -38,7 +38,7 @@ spec:
     - name: url
       value: git@github.com:scra99s/tekton.git
     - name: revision
-      value: main
+      value: dev
 
 ---
 ########################################
