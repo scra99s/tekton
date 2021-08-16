@@ -1,5 +1,5 @@
 # This definition needs to deployed using kubectl
-# kubectl.exe apply -f Secrets.yml
+# kubectl.exe apply -f pipeline/Secrets.yml
 ---
 ########################################
 # Namespace for pipeline.
