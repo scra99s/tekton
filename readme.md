@@ -106,5 +106,5 @@ bash setup/config/kubeapply.sh app/registry/registry-deployment.yaml
 bash setup/config/kubeapply.sh pipeline/Secrets.yaml
 
 # Create the pipeline.
-kubectl.exe -f apply pipeline/Pipeline.yaml
+kubectl.exe apply --filename pipeline/Pipeline.yaml
 ```
