@@ -1,0 +1,20 @@
+---
+# tekton-dashboard ingress
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: tekton-dashboard
+  namespace: tekton-pipelines
+spec:
+  tls:
+    - secretName: ingress-tls
+  rules:
+    - host: tekton-dashboard.jerra.io
+      http:
+        paths:
+          - pathType: ImplementationSpecific
+            backend:
+              service:
+                name: tekton-dashboard
+                port:
+                  number: 9097

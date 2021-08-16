@@ -1,0 +1,121 @@
+# This definition needs to deployed using kubectl
+# kubectl.exe apply -f Secrets.yml
+---
+########################################
+# Namespace for pipeline.
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: pipeline
+  labels:
+    name: pipeline
+
+---
+########################################
+# Pipeline resource for docker registry (output).
+kind: PipelineResource
+apiVersion: tekton.dev/v1alpha1
+metadata:
+  name: registry-output
+  namespace: pipeline
+spec:
+  type: image
+  params:
+    - name: url
+      value: docker-registry.jerra.io/tekton-images
+
+---
+########################################
+# Pipeline resource for git repository (input).
+kind: PipelineResource
+apiVersion: tekton.dev/v1alpha1
+metadata:
+  name: git-input
+  namespace: pipeline
+spec:
+  type: git
+  params:
+    - name: url
+      value: git@github.com:scra99s/tekton-practice.git
+    - name: revision
+      value: main
+
+---
+########################################
+# Service account for pipeline secrets.
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: build-bot
+  namespace: pipeline
+  labels:
+    name: build-bot
+secrets:
+  - name: registry-basic-auth
+  - name: git-ssh-key
+
+---
+########################################
+# Task to build container from git and push to docker registry.
+kind: Task
+apiVersion: tekton.dev/v1beta1
+metadata:
+  name: build-and-push-task
+  namespace: pipeline
+spec:
+  resources:
+    inputs:
+      - name: git-input
+        type: git
+    outputs:
+      - name: builtImage
+        type: image
+  params:
+    - name: pathToDockerFile
+      type: string
+      description: The path to the dockerfile to build
+    - name: pathToContext
+      type: string
+  steps:
+    - name: build-and-push-step
+      image: gcr.io/kaniko-project/executor:v0.17.1
+      # specifying DOCKER_CONFIG is required to allow kaniko to detect docker credential
+      env:
+        - name: "DOCKER_CONFIG"
+          value: "/tekton/home/.docker/"
+      securityContext:
+        runAsUser: 0
+      command:
+        - /kaniko/executor
+      args:
+        - --skip-tls-verify=true
+        - --dockerfile=$(inputs.params.pathToDockerFile)
+        - --destination=$(outputs.resources.builtImage.url)
+        - --context=$(inputs.params.pathToContext)
+
+---
+########################################
+# Single task initiator ().
+kind: TaskRun
+apiVersion: tekton.dev/v1beta1
+metadata:
+  name: build-and-push-run
+  namespace: pipeline
+spec:
+  serviceAccountName: build-bot
+  taskRef:
+    name: build-docker-image-from-git-source
+  resources:
+    inputs:
+      - name: git-input
+        resourceRef:
+          name: git-input
+    outputs:
+      - name: builtImage
+        resourceRef:
+          name: registry-output
+  params:
+    - name: pathToDockerFile
+      value: /workspace/git-input/app/web-server/image/Dockerfile
+    - name: pathToContext
+      value: /workspace/git-input/app/web-server/image/

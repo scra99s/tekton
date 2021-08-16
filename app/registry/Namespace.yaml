@@ -1,0 +1,8 @@
+---
+# Registry namespace
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: registry
+  labels:
+    name: registry

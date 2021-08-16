@@ -1,0 +1,15 @@
+---
+# Patches the tekton-pipelines-controller to look at our
+# registry certificate not their set of defaults I'm assuming
+# that they have already done this in the org.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-registry-cert
+  namespace: tekton-pipelines
+  labels:
+    app.kubernetes.io/instance: default
+    app.kubernetes.io/part-of: tekton-pipelines
+data:
+  cert: |
+$(awk '{printf "    %s\n", $0}' < ${templateVariables[__SSL_CA_CERT__]})

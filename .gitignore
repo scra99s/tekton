@@ -1,0 +1,12 @@
+.secrets.ini
+secrets.ini
+Secrets.ini
+.secrets.sh
+secrets.sh
+Secrets.sh
+.usefull
+*.key
+*.crt
+*.pem
+*.csr
+*.srl
