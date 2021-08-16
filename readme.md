@@ -92,6 +92,7 @@ bash setup/config/kubeapply.sh setup/patches/Secret.yaml
 # e.g. 192.168.1.2 tekton-dashboard.jerra.io
 bash setup/config/kubeapply.sh setup/patches/Ingress.yaml
 ```
+
 ## Deploy Docker Registry
 - We need a local registry to test auth methods.
 ```bash
